@@ -1,7 +1,8 @@
 <?php
 
 /**
- *
+ * PHP Client Handler for Youtube API.
+ * Google API Client v2.
  */
 class jwplayerYTApi {
 
@@ -44,7 +45,7 @@ class jwplayerYTApi {
         try {
             $this->authenticate();
             $this->client->authenticate($code);
-            variable_set('jwplayer_youtube_token', drupal_json_decode($this->client->getAccessToken()));
+            variable_set('jwplayer_youtube_token', $this->client->getAccessToken());
         }
         catch (Google_ServiceException $e) {
             drupal_set_message(t('A service error occurred: <code>@error</code></p>', array('@error' => htmlspecialchars($e->getMessage()))), 'error');
@@ -103,14 +104,14 @@ class jwplayerYTApi {
         $error = '';
         try {
             $this->authenticate();
-            $this->client->setAccessToken(drupal_json_encode($token));
+            $this->client->setAccessToken($token);
 
             // Check to see if our access token has expired.
             // If so, get a new one and save it to file for future use.
             if ($this->client->isAccessTokenExpired()) {
-                $new_token = json_decode($this->client->getAccessToken());
-                $this->client->refreshToken($new_token->refresh_token);
-                $token = drupal_json_decode($this->client->getAccessToken());
+                $new_token = $this->client->getAccessToken();
+                $this->client->refreshToken($new_token['refresh_token']);
+                $token = $this->client->getAccessToken();
                 variable_set('jwplayer_youtube_token', $token);
             }
         }
