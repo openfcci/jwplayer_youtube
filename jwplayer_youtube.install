@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+ */
+function jwplayer_youtube_uninstall() {
+    $variables = array(
+      'youtubeapi',
+      'googleapi_auth',
+      'googleapi_token',
+    );
+    foreach ($variables as $variable) {
+        variable_del($variable);
+    }
+}

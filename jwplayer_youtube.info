@@ -1,6 +1,6 @@
 name = JW Player: Youtube Migration
 description = Migrate JW Player videos to YouTube Services
-version = 7.x-2.0
+version = 7.x-2.9.28
 core = 7.x
 package = jwplayer
 files[] = jwplayer_youtube.admin.inc

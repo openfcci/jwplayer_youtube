@@ -7,37 +7,37 @@ module_load_include('ytapi.inc', 'jwplayer_youtube');
  * Implements hook_menu().
  */
 function jwplayer_youtube_menu() {
-  $items = array();
+    $items = array();
 
-  $items['admin/config/media/jwplayer_youtube'] = array(
-    'title' => 'Yotube Settings',
-    'description' => 'Adjust YouTube Account settings.',
-    'file' => 'jwplayer_youtube.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('jwplayer_youtube_account_settings_form'),
-    'access arguments' => array('administer site configuration'),
-  );
+    $items['admin/config/media/jwplayer_youtube'] = array(
+      'title' => 'Yotube Settings',
+      'description' => 'Adjust YouTube Account settings.',
+      'file' => 'jwplayer_youtube.admin.inc',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('jwplayer_youtube_account_settings_form'),
+      'access arguments' => array('administer site configuration'),
+    );
 
-  $items['jwplayer_youtube/oauth2callback'] = array(
-    'title' => 'YouTube callback',
-    'page callback' => '_jwplayer_youtube_ytcallback',
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
+    $items['jwplayer_youtube/oauth2callback'] = array(
+      'title' => 'YouTube callback',
+      'page callback' => '_jwplayer_youtube_ytcallback',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+    );
 
-  return $items;
+    return $items;
 }
 
 /**
  * Get country.
  */
 function _jwplayer_youtube_get_country() {
-  $country = variable_get('jwplayer_youtube_app_country', NULL);
-  if (empty($country)) {
-    $sd_country = variable_get('site_default_country', 'US');
-    $country = empty($sd_country) ? 'US' : $sd_country;
-  }
-  return $country;
+    $country = variable_get('jwplayer_youtube_app_country', NULL);
+    if (empty($country)) {
+        $sd_country = variable_get('site_default_country', 'US');
+        $country = empty($sd_country) ? 'US' : $sd_country;
+    }
+    return $country;
 }
 
 /**
@@ -47,21 +47,16 @@ function _jwplayer_youtube_get_country() {
  */
 function _jwplayer_youtube_ytcallback() {
 
-  $params = drupal_get_query_parameters();
+    $params = drupal_get_query_parameters();
 
-  if (!empty($params['code'])) {
-    module_load_include('ytapi.inc', 'jwplayer_youtube');
-    $ytapi = new jwplayerYTApi();
-    $ytapi->getTokenFromCode($params['code']);
-
-    // Set a default video category if empty because it is requested to upload.
-    if (variable_get('jwplayer_youtube_category', 0) == 0) {
-      variable_set('jwplayer_youtube_category', 25); // News & Politics
+    if (!empty($params['code'])) {
+        module_load_include('ytapi.inc', 'jwplayer_youtube');
+        $ytapi = new jwplayerYTApi();
+        $ytapi->getTokenFromCode($params['code']);
+        variable_set('googleapi_auth', TRUE);
     }
-    variable_set('jwplayer_youtube_auth', TRUE);
-  }
 
-  drupal_goto('admin/config/media/jwplayer_youtube');
+    drupal_goto('admin/config/media/jwplayer_youtube');
 }
 
 /**
@@ -71,17 +66,17 @@ function _jwplayer_youtube_ytcallback() {
  * @return type
  */
 function jwplayer_youtube_get_video_data($media_key) {
-  $params = array(
-    'q' => 'media_key:' . $media_key,
-    'wt' => 'json',
-    'indent' => 'true',
-  );
+    $params = array(
+      'q' => 'media_key:' . $media_key,
+      'wt' => 'json',
+      'indent' => 'true',
+    );
 
-  $query = http_build_query($params);
-  $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
-  $video = $feed->response->docs[0];
+    $query = http_build_query($params);
+    $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
+    $video = $feed->response->docs[0];
 
-  return $video;
+    return $video;
 }
 
 /**
@@ -89,9 +84,9 @@ function jwplayer_youtube_get_video_data($media_key) {
  * @param type $media_key
  */
 function jwplayer_youtube_upload_video_to_youtube($media_key = NULL) {
-  $video = jwplayer_youtube_get_video_data($media_key);
-  $ytapi = new jwplayerYTApi();
-  $ytapi->uploadVideo($video);
+    $video = jwplayer_youtube_get_video_data($media_key);
+    $ytapi = new jwplayerYTApi();
+    $ytapi->uploadVideo($video);
 }
 
 /**
@@ -100,7 +95,7 @@ function jwplayer_youtube_upload_video_to_youtube($media_key = NULL) {
  */
 function _jwplayer_youtube_upload_videos_bulk($media) {
     $ytapi = new jwplayerYTApi();
-    foreach($media as $video) {
+    foreach ($media as $video) {
         $ytapi->uploadVideo($video);
     }
 }
@@ -110,20 +105,20 @@ function _jwplayer_youtube_upload_videos_bulk($media) {
  * @return type
  */
 function jwplayer_youtube_get_video_data_bulk($start, $rows) {
-  $end_date = strtotime('-3 month');
-  $params = array(
-    'q' => "date:[* TO {$end_date}]",
-    'start' => $start,
-    'rows' => $rows,
-    'wt' => 'json',
-    'indent' => 'true',
-    'sort' => 'date asc'
-  );
+    $end_date = strtotime('-3 month');
+    $params = array(
+      'q' => "date:[* TO {$end_date}]",
+      'start' => $start,
+      'rows' => $rows,
+      'wt' => 'json',
+      'indent' => 'true',
+      'sort' => 'date asc'
+    );
 
-  $query = http_build_query($params);
-  $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
-  $video = $feed->response->docs;
-  return $video;
+    $query = http_build_query($params);
+    $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
+    $video = $feed->response->docs;
+    return $video;
 }
 
 /**
@@ -131,19 +126,19 @@ function jwplayer_youtube_get_video_data_bulk($start, $rows) {
  * @return type
  */
 function jwplayer_youtube_get_video_data_cron_tab() {
-  $start_date = strtotime('-3 month -1 day');
-  $end_date = strtotime('-3 month');
-  $params = array(
-    'q' => "date:[{$start_date} TO {$end_date}]",
-    'start' => 0,
-    'rows' => jwplayer_get_video_total(),
-    'wt' => 'json',
-    'indent' => 'true',
-    'sort' => 'date asc'
-  );
+    $start_date = strtotime('-3 month -1 day');
+    $end_date = strtotime('-3 month');
+    $params = array(
+      'q' => "date:[{$start_date} TO {$end_date}]",
+      'start' => 0,
+      'rows' => jwplayer_get_video_total(),
+      'wt' => 'json',
+      'indent' => 'true',
+      'sort' => 'date asc'
+    );
 
-  $query = http_build_query($params);
-  $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
-  $video = $feed->response->docs[0];
-  return $video;
+    $query = http_build_query($params);
+    $feed = json_decode(file_get_contents("http://search01.fccinteractive.com/solr/jwplayer_data_shard1_replica1/select?{$query}"));
+    $video = $feed->response->docs[0];
+    return $video;
 }

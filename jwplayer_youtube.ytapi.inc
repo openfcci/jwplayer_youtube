@@ -45,7 +45,7 @@ class jwplayerYTApi {
         try {
             $this->authenticate();
             $this->client->authenticate($code);
-            variable_set('jwplayer_youtube_token', $this->client->getAccessToken());
+            variable_set('googleapi_token', $this->client->getAccessToken());
         }
         catch (Google_ServiceException $e) {
             drupal_set_message(t('A service error occurred: <code>@error</code></p>', array('@error' => htmlspecialchars($e->getMessage()))), 'error');
@@ -60,20 +60,18 @@ class jwplayerYTApi {
      */
     public function authenticate($credentials = array()) {
 
+        $credentials = json_decode(variable_get('youtubeapi', ''));
+
         $error = '';
         try {
             if (!isset($this->client)) {
-                $app_name = !empty($credentials['app_name']) ? $credentials['app_name'] : variable_get('jwplayer_youtube_app_name', '');
-                $client_secret = !empty($credentials['client_secret']) ? $credentials['client_secret'] : variable_get('jwplayer_youtube_client_secret', '');
-                $client_id = !empty($credentials['client_id']) ? $credentials['client_id'] : variable_get('jwplayer_youtube_client_id', '');
-
                 // Authenticate to Google API.
                 $client = new Google_Client();
-                $client->setClientId($client_id);
-                $client->setClientSecret($client_secret);
+                $client->setClientId($credentials->client_id);
+                $client->setClientSecret($credentials->client_secret);
                 $client->setScopes('https://www.googleapis.com/auth/youtube');
                 $client->setRedirectUri($GLOBALS['base_url'] . '/jwplayer_youtube/oauth2callback');
-                $client->setApplicationName($app_name);
+                $client->setApplicationName($credentials->app_name);
                 $client->setAccessType('offline');
                 $client->setApprovalPrompt('force');
 
@@ -95,7 +93,7 @@ class jwplayerYTApi {
      */
     public function getFreshToken() {
 
-        $token = variable_get('jwplayer_youtube_token', array());
+        $token = variable_get('googleapi_token', array());
 
         if (empty($token['refresh_token'])) {
             return array('error' => t('no refresh token'));
@@ -112,7 +110,7 @@ class jwplayerYTApi {
                 $new_token = $this->client->getAccessToken();
                 $this->client->refreshToken($new_token['refresh_token']);
                 $token = $this->client->getAccessToken();
-                variable_set('jwplayer_youtube_token', $token);
+                variable_set('googleapi_token', $token);
             }
         }
         catch (Google_ServiceException $e) {
