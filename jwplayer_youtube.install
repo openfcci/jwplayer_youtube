@@ -13,3 +13,35 @@ function jwplayer_youtube_uninstall() {
         variable_del($variable);
     }
 }
+
+/**
+ * Implements hook_schema().
+ */
+function jwplayer_youtube_schema() {
+
+    $schema['jw_migrate'] = array(
+      'description' => 'Migration table for remapping purposes.',
+      'fields' => array(
+        'jwplayer_id' => array(
+          'description' => 'The primary identifier for jwplayer video.',
+          'type' => 'varchar',
+          'length' => 8,
+          'not null' => TRUE,
+        ),
+        'youtube_id' => array(
+          'description' => 'The primary identifier for youtube video.',
+          'type' => 'varchar',
+          'length' => 11,
+          'not null' => TRUE,
+        ),
+        'timestamp' => array(
+          'description' => 'Timestamp of migration.',
+          'type' => 'int',
+          'length' => 11,
+          'not null' => TRUE,
+        ),
+      ),
+      'primary key' => array('jwplayer_id'),
+    );
+    return $schema;
+}

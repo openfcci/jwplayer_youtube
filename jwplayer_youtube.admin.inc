@@ -55,6 +55,7 @@ function jwplayer_youtube_account_settings_form($form, $form_state) {
     $form['google_app']['client_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Client ID'),
+      '#description' => '<em>xxx..apps.googleusercontent.com</em><br />',
       '#default_value' => $credentials->client_id,
       '#required' => TRUE,
     );
@@ -62,7 +63,7 @@ function jwplayer_youtube_account_settings_form($form, $form_state) {
     $form['google_app']['client_secret'] = array(
       '#type' => 'textfield',
       '#title' => t('Client secret'),
-      '#description' => '<em>xxx..apps.googleusercontent.com</em><br />' . t('Get credentials keys on !here <br />Next in "APIs & auth" -> "Credentials" -> "OAuth". Click "Create new Client ID" and then under "Application Type" select "Web Application".<br />For the redirect uri use !protocol :// !server_name /jwplayer_youtube/oauth2callback', array(
+      '#description' => t('Get credentials keys on !here <br />Next in "APIs & auth" -> "Credentials" -> "OAuth". Click "Create new Client ID" and then under "Application Type" select "Web Application".<br />For the redirect uri use !protocol :// !server_name /jwplayer_youtube/oauth2callback', array(
         '!here' => l(t('https://console.developers.google.com'), 'https://console.developers.google.com/project'),
         '!protocol' => $protocol,
         '!server_name' => $_SERVER['SERVER_NAME'])),
@@ -143,14 +144,14 @@ function jwplayer_youtube_get_settings_form() {
     //Credentials
     $default = _get_default_credentials();
 
-    $ret['youtube_upload'] = array(
+    $form['youtube_upload'] = array(
       '#type' => 'fieldset',
       '#title' => t('YouTube settings'),
       '#description' => t('These settings can be overriden in each field settings'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
-    $ret['youtube_upload']['default_publishing_options'] = array(
+    $form['youtube_upload']['default_publishing_options'] = array(
       '#type' => 'radios',
       '#title' => t('Default privacy options'),
       '#description' => t('More info on !here', array('!here' => l(t('YouTube support page'), 'http://support.google.com/youtube/bin/answer.py?hl=en&answer=157177'))),
@@ -160,21 +161,21 @@ function jwplayer_youtube_get_settings_form() {
     $ytapi = new jwplayerYTApi();
     $cats = $ytapi->getCategories();
 
-    $ret['youtube_upload']['default_category'] = array(
+    $form['youtube_upload']['default_category'] = array(
       '#type' => 'select',
       '#title' => t('Default main category'),
       '#options' => $cats,
       '#description' => t('The category is required by YouTube.'),
       '#default_value' => $default->category,
     );
-    $ret['youtube_upload']['default_description'] = array(
+    $form['youtube_upload']['default_description'] = array(
       '#type' => 'textarea',
       '#title' => t('Default description'),
       '#description' => t('The description is required by YouTube.'),
       '#default_value' => $default->description,
       '#required' => TRUE,
     );
-    $ret['youtube_upload']['default_tags'] = array(
+    $form['youtube_upload']['default_tags'] = array(
       '#type' => 'textfield',
       '#title' => t('Default tags'),
       '#description' => t('Separate the tags by a coma. Example <em> funny, fun</em>'),
@@ -182,5 +183,5 @@ function jwplayer_youtube_get_settings_form() {
       '#required' => TRUE,
     );
 
-    return $ret;
+    return $form;
 }

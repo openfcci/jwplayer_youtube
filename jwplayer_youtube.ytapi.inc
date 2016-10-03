@@ -183,16 +183,18 @@ class jwplayerYTApi {
             // REPLACE this value with the path to the file you are uploading.
             $videoPath = "https://content.jwplatform.com/videos/{$media->media_key}.mp4";
             $size = $this->curlFileSize($media->media_key);
+            // Get default youtube snippets
+            $default = json_decode(variable_get('youtubeapi', ''));
 
             $snippet = new Google_Service_YouTube_VideoSnippet();
             $snippet->setTitle($media->title);
-            $snippet->setDescription(!empty($media->description) ? $media->description : variable_get('jwplayer_youtube_description', ''));
-            $snippet->setCategoryId(variable_get('jwplayer_youtube_category', 25));
-            $snippet->setTags(!empty($media->tags) ? array($media->tags) : variable_get('jwplayer_youtube_tags', ''));
+            $snippet->setDescription(!empty($media->description) ? $media->description : $default->default_description);
+            $snippet->setCategoryId($default->default_category);
+            $snippet->setTags(!empty($media->tags) ? array($media->tags) : $default->default_tags);
 
             // Change the privacy setting.
             $status = new Google_Service_YouTube_VideoStatus();
-            $status->privacyStatus = variable_get('jwplayer_youtube_publishing_options', 'unlisted');
+            $status->privacyStatus = $default->default_publishing_options;
 
             // Associate the snippet and status objects with a new video resource.
             $video = new Google_Service_YouTube_Video();
@@ -236,6 +238,9 @@ class jwplayerYTApi {
 
             // If you want to make other calls after the file upload, set setDefer back to false
             $this->client->setDefer(false);
+            // Update migration table
+            _jwplayer_youtube_upload_migration_data($media->media_key, $status['id']);
+
             $youtube_new_url = "https://www.youtube.com/watch?v=" . $status['id'];
 
             return array(true, $youtube_new_url);

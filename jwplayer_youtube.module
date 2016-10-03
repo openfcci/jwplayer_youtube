@@ -32,7 +32,7 @@ function jwplayer_youtube_menu() {
  * Get country.
  */
 function _jwplayer_youtube_get_country() {
-    $country = variable_get('jwplayer_youtube_app_country', NULL);
+    $country = json_decode(variable_get('youtubeapi', ''))->app_country;
     if (empty($country)) {
         $sd_country = variable_get('site_default_country', 'US');
         $country = empty($sd_country) ? 'US' : $sd_country;
@@ -60,7 +60,45 @@ function _jwplayer_youtube_ytcallback() {
 }
 
 /**
- * Retreive video keywords for DoubleClick.
+ * Upload video to YouTube by JWPlayer key.
+ * @param type $media_key
+ */
+function jwplayer_youtube_upload_video_to_youtube($media_key = NULL) {
+    $video = jwplayer_youtube_get_video_data($media_key);
+    $ytapi = new jwplayerYTApi();
+    $ytapi->uploadVideo($video);
+}
+
+/**
+ * Upload video to YouTube through Drush command.
+ * @param type $media
+ */
+function _jwplayer_youtube_upload_videos_bulk($media) {
+    $ytapi = new jwplayerYTApi();
+    foreach ($media as $video) {
+        $ytapi->uploadVideo($video);
+    }
+}
+
+/**
+ * Upload youtube information after upload for migration purposes.
+ * @param type $jwplayer_id
+ * @param type $youtube_id
+ */
+function _jwplayer_youtube_upload_migration_data($jwplayer_id, $youtube_id) {
+    if ($jwplayer_id && $youtube_id) {
+        db_merge('jw_migrate')
+            ->key(array('jwplayer_id' => $jwplayer_id))
+            ->fields(array(
+              'youtube_id' => $youtube_id,
+              'timestamp' => REQUEST_TIME,
+            ))
+            ->execute();
+    }
+}
+
+/**
+ * Retreive video feed based on media key.
  *
  * @param type $media_key
  * @return type
@@ -80,34 +118,12 @@ function jwplayer_youtube_get_video_data($media_key) {
 }
 
 /**
- *
- * @param type $media_key
- */
-function jwplayer_youtube_upload_video_to_youtube($media_key = NULL) {
-    $video = jwplayer_youtube_get_video_data($media_key);
-    $ytapi = new jwplayerYTApi();
-    $ytapi->uploadVideo($video);
-}
-
-/**
- *
- * @param type $media_key
- */
-function _jwplayer_youtube_upload_videos_bulk($media) {
-    $ytapi = new jwplayerYTApi();
-    foreach ($media as $video) {
-        $ytapi->uploadVideo($video);
-    }
-}
-
-/**
- *
+ * Retrieve videos feeds.
  * @return type
  */
 function jwplayer_youtube_get_video_data_bulk($start, $rows) {
-    $end_date = strtotime('-3 month');
     $params = array(
-      'q' => "date:[* TO {$end_date}]",
+      'q' => '*',
       'start' => $start,
       'rows' => $rows,
       'wt' => 'json',
@@ -122,7 +138,8 @@ function jwplayer_youtube_get_video_data_bulk($start, $rows) {
 }
 
 /**
- *
+ * Retrieve videos feeds though CronTab.
+ * TODO: POC: PROBABLY NOT REQUIRED IN LATER BUILDS
  * @return type
  */
 function jwplayer_youtube_get_video_data_cron_tab() {
